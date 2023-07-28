@@ -115,7 +115,7 @@ func (t *Trick) GatheringInfo() Info {
 
 func (t *Trick) Winner2() int {
 	info := t.GatheringInfo()
-	if info.SkullKing >= 0 && info.Pirate >= 0 && info.Mermaid >= 0 {
+	if info.SkullKing >= 0 && info.Mermaid >= 0 {
 		return info.Mermaid
 	}
 	if info.SkullKing >= 0 && info.Pirate >= 0 {
@@ -123,9 +123,6 @@ func (t *Trick) Winner2() int {
 	}
 	if info.Pirate >= 0 && info.Mermaid >= 0 {
 		return info.Pirate
-	}
-	if info.SkullKing >= 0 && info.Mermaid >= 0 {
-		return info.Mermaid
 	}
 	if info.SkullKing >= 0 {
 		return info.SkullKing
