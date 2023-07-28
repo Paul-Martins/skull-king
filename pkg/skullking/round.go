@@ -7,6 +7,8 @@ package skullking
 type Trick struct {
 	Table []*Play
 }
+
+//Structure to gather the necessary data to declare a winner
 type InfoWinner struct {
 	SkullKing  int
 	Pirate     int
@@ -16,6 +18,8 @@ type InfoWinner struct {
 	Suit       int
 	SuitValue  int
 }
+
+//Structure to gather the necessary data to count how many points this trick would concede
 type InfoPoints struct {
 	SkullKing bool
 	Pirates   int
@@ -49,6 +53,39 @@ func NewTrick(numberOfPlayers int) *Trick {
 // It will return an error if the card cannot be played
 func (t *Trick) Play(p Play) error {
 	panic("Not Implemented Yet")
+}
+
+//Loop over the deck to gather info to check points
+func (t *Trick) GatheringInfoPoints() InfoPoints {
+	info := InfoPoints{
+		SkullKing: false,
+		Pirates:   0,
+		Mermaids:  0,
+		Black14:   false,
+		Suits14:   0,
+	}
+	for _, v := range t.Table {
+		if v.Card.Type == CardTypeSkullKing {
+			info.SkullKing = true
+			continue
+		}
+		if v.Card.Type == CardTypePirate {
+			info.Pirates++
+			continue
+		}
+		if v.Card.Type == CardTypeMermaid {
+			info.Mermaids++
+			continue
+		}
+		if v.Card.Value == 14 {
+			if v.Card.Type == CardTypeSuitBlack {
+				info.Black14 = true
+			} else {
+				info.Suits14++
+			}
+		}
+	}
+	return info
 }
 
 // Points returns the amount of points that this specific trick is worth for the player that wins it.
@@ -95,15 +132,16 @@ func (t *Trick) Leading() CardType {
 	return t.Table[position].Card.Type
 }
 
+//Loop over the deck to gather info to check winner
 func (t *Trick) GatheringInfoWinner() InfoWinner {
 	info := InfoWinner{
 		SkullKing:  -1,
 		Pirate:     -1,
 		Mermaid:    -1,
 		Black:      -1,
-		BlackValue: -1,
+		BlackValue: 0,
 		Suit:       -1,
-		SuitValue:  -1,
+		SuitValue:  0,
 	}
 	leadingSuit := t.Leading()
 	for i, v := range t.Table {
@@ -128,38 +166,6 @@ func (t *Trick) GatheringInfoWinner() InfoWinner {
 			info.Suit = i
 			info.SuitValue = v.Card.Value
 			continue
-		}
-	}
-	return info
-}
-
-func (t *Trick) GatheringInfoPoints() InfoPoints {
-	info := InfoPoints{
-		SkullKing: false,
-		Pirates:   0,
-		Mermaids:  0,
-		Black14:   false,
-		Suits14:   0,
-	}
-	for _, v := range t.Table {
-		if v.Card.Type == CardTypeSkullKing {
-			info.SkullKing = true
-			continue
-		}
-		if v.Card.Type == CardTypePirate {
-			info.Pirates++
-			continue
-		}
-		if v.Card.Type == CardTypeMermaid {
-			info.Mermaids++
-			continue
-		}
-		if v.Card.Value == 14 {
-			if v.Card.Type == CardTypeSuitBlack {
-				info.Black14 = true
-			} else {
-				info.Suits14++
-			}
 		}
 	}
 	return info
