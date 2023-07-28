@@ -44,12 +44,6 @@ func (t *Trick) Play(p Play) error {
 	panic("Not Implemented Yet")
 }
 
-// Winner will return the player that wins the current Trick
-func (t *Trick) Winner() *Player {
-	winnerPosition := t.Winner2()
-	return t.Table[winnerPosition].Player
-}
-
 // Points returns the amount of points that this specific trick is worth for the player that wins it.
 func (t *Trick) Points() int {
 	return 0
@@ -113,7 +107,8 @@ func (t *Trick) GatheringInfo() Info {
 	return info
 }
 
-func (t *Trick) Winner2() int {
+// Winner will return the player that wins the current Trick
+func (t *Trick) Winner() int {
 	info := t.GatheringInfo()
 	if info.SkullKing >= 0 && info.Mermaid >= 0 {
 		return info.Mermaid
