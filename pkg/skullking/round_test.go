@@ -746,7 +746,7 @@ func TestTrick_Points(t *testing.T) {
 			Want: 0,
 		},
 		{
-			Name: "Two pirates so nothing",
+			Name: "Two mermaids so nothing",
 			Trick: Trick{
 				Table: []*Play{
 					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
