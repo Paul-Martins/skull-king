@@ -7,7 +7,7 @@ package skullking
 type Trick struct {
 	Table []*Play
 }
-type Info struct {
+type InfoWinner struct {
 	SkullKing  int
 	Pirate     int
 	Mermaid    int
@@ -15,6 +15,13 @@ type Info struct {
 	BlackValue int
 	Suit       int
 	SuitValue  int
+}
+type InfoPoints struct {
+	SkullKing bool
+	Pirates   int
+	Mermaids  int
+	Black14   bool
+	Suits14   int
 }
 
 // Round Consisting of 1 or more tricks. The number of
@@ -46,7 +53,26 @@ func (t *Trick) Play(p Play) error {
 
 // Points returns the amount of points that this specific trick is worth for the player that wins it.
 func (t *Trick) Points() int {
-	return 0
+	info := t.GatheringInfoPoints()
+	sum := 0
+	sum += info.Suits14 * 10
+	if info.Black14 {
+		sum += 20
+	}
+	if info.SkullKing && info.Mermaids > 0 {
+		sum += 40
+		return sum
+	}
+	if info.SkullKing && info.Pirates > 0 {
+		sum += info.Pirates * 30
+		return sum
+	}
+	if info.Pirates > 0 && info.Mermaids > 0 {
+		sum += info.Mermaids * 20
+		return sum
+	}
+
+	return sum
 }
 
 func (t *Trick) Leading() CardType {
@@ -69,8 +95,8 @@ func (t *Trick) Leading() CardType {
 	return t.Table[position].Card.Type
 }
 
-func (t *Trick) GatheringInfo() Info {
-	info := Info{
+func (t *Trick) GatheringInfoWinner() InfoWinner {
+	info := InfoWinner{
 		SkullKing:  -1,
 		Pirate:     -1,
 		Mermaid:    -1,
@@ -107,9 +133,41 @@ func (t *Trick) GatheringInfo() Info {
 	return info
 }
 
+func (t *Trick) GatheringInfoPoints() InfoPoints {
+	info := InfoPoints{
+		SkullKing: false,
+		Pirates:   0,
+		Mermaids:  0,
+		Black14:   false,
+		Suits14:   0,
+	}
+	for _, v := range t.Table {
+		if v.Card.Type == CardTypeSkullKing {
+			info.SkullKing = true
+			continue
+		}
+		if v.Card.Type == CardTypePirate {
+			info.Pirates++
+			continue
+		}
+		if v.Card.Type == CardTypeMermaid {
+			info.Mermaids++
+			continue
+		}
+		if v.Card.Value == 14 {
+			if v.Card.Type == CardTypeSuitBlack {
+				info.Black14 = true
+			} else {
+				info.Suits14++
+			}
+		}
+	}
+	return info
+}
+
 // Winner will return the player that wins the current Trick
 func (t *Trick) Winner() int {
-	info := t.GatheringInfo()
+	info := t.GatheringInfoWinner()
 	if info.SkullKing >= 0 && info.Mermaid >= 0 {
 		return info.Mermaid
 	}

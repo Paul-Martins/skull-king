@@ -621,6 +621,334 @@ func TestTrick_Winner(t *testing.T) {
 
 }
 
+type TableTestPoints struct {
+	Name  string
+	Trick Trick
+
+	Want int
+}
+
+func TestTrick_Points(t *testing.T) {
+	players := []*Player{
+		{Name: "Victor"},
+		{Name: "Erik"},
+		{Name: "Ortega"},
+		{Name: "Ignacio"},
+	}
+
+	table := []TableTestWinner{
+		{
+			Name: "No points",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "One 14 card",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 9}},
+				},
+			},
+			Want: 10,
+		},
+		{
+			Name: "Two 14 cards",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "14 Black card",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitGreen, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "14 Black and a 14 suit cards",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitGreen, Value: 9}},
+				},
+			},
+			Want: 30,
+		},
+		{
+			Name: "14 Black and two 14 suit cards",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "One pirate so nothing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitBlack, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 9}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "Two pirates so nothing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitBlack, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypePirate}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "One mermaid so nothing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitBlack, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 9}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "Two pirates so nothing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitBlack, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "One SkullKing so nothing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitBlack, Value: 2}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+					{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 9}},
+				},
+			},
+			Want: 0,
+		},
+		{
+			Name: "Pirate and one Mermaid",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 12}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "Pirate and one Mermaid + 14s",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypePirate}},
+				},
+			},
+			Want: 30,
+		},
+		{
+			Name: "Pirate and two Mermaid",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "Pirate and two Mermaid + 14",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 60,
+		},
+		{
+			Name: "SkullKing and one Pirate",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 12}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypeSkullKing}},
+				},
+			},
+			Want: 30,
+		},
+		{
+			Name: "SkullKing and one Pirate + 14s",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypePirate}},
+				},
+			},
+			Want: 60,
+		},
+		{
+			Name: "SkullKing and two Pirate",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypePirate}},
+				},
+			},
+			Want: 60,
+		},
+		{
+			Name: "SkullKing and two Pirate + 14",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypePirate}},
+					{Player: players[1], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypePirate}},
+				},
+			},
+			Want: 80,
+		},
+		{
+			Name: "Mermaid and one SkullKing",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 12}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 10}},
+					{Player: players[3], Card: Card{Type: CardTypeSkullKing}},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "Mermaid and one SkullKing + 14s",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 60,
+		},
+		{
+			Name: "Mermaid SkullKing and Pirate",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitGreen, Value: 4}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "Mermaid SkullKing and Pirate + 14",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 50,
+		},
+		{
+			Name: "Two Mermaids SkullKing and Pirate",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypeMermaid}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "Mermaid SkullKing and two Pirates",
+			Trick: Trick{
+				Table: []*Play{
+					{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+					{Player: players[1], Card: Card{Type: CardTypePirate}},
+					{Player: players[2], Card: Card{Type: CardTypePirate}},
+					{Player: players[3], Card: Card{Type: CardTypeMermaid}},
+				},
+			},
+			Want: 40,
+		},
+	}
+	for _, tt := range table {
+		t.Run(tt.Name, func(t *testing.T) {
+			got := tt.Trick.Points()
+			if !reflect.DeepEqual(got, tt.Want) {
+				t.Errorf("Expected Points %d / Received Points %d ", tt.Want, got)
+			}
+		})
+	}
+
+}
+
 type TableTestLeading struct {
 	name  string
 	trick Trick
