@@ -612,7 +612,7 @@ func TestTrick_Winner(t *testing.T) {
 	}
 	for _, tt := range table {
 		t.Run(tt.Name, func(t *testing.T) {
-			got := tt.Trick.Winner()
+			got := tt.Trick.WinnerPosition()
 			if !reflect.DeepEqual(got, tt.Want) {
 				t.Errorf("Expected Player %d (%s) / Received Player %d (%s)", tt.Want, players[tt.Want].Name, got, players[got].Name)
 			}
@@ -941,6 +941,379 @@ func TestTrick_Points(t *testing.T) {
 	for _, tt := range table {
 		t.Run(tt.Name, func(t *testing.T) {
 			got := tt.Trick.Points()
+			if !reflect.DeepEqual(got, tt.Want) {
+				t.Errorf("Expected Points %d / Received Points %d ", tt.Want, got)
+			}
+		})
+	}
+
+}
+
+type TableTestBids struct {
+	Name   string
+	Round  Round
+	Player Player
+
+	Want int
+}
+
+func TestTrick_Bids(t *testing.T) {
+	players := []*Player{
+		{Name: "Victor"},
+		{Name: "Erik"},
+		{Name: "Ortega"},
+		{Name: "Ignacio"},
+	}
+
+	table := []TableTestBids{
+		{
+			Name: "1st Round 0 Bid OK",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 0},
+				},
+			},
+			Want: 10,
+		},
+		{
+			Name: "1st Round 0 Bid KO",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 0},
+				},
+			},
+			Want: -10,
+		},
+		{
+			Name: "1st Round 1 Bid OK",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 13}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "1st Round 1 Bid KO",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitGreen, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: -10,
+		},
+		{
+			Name: "1st Round 1 Bid OK + Points",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: 30,
+		},
+		{
+			Name: "1st Round 1 Bid KO without Points",
+			Round: Round{
+				Number: 1,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: -10,
+		},
+		{
+			Name: "2nd Round 0 Bid OK",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 0},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "2nd Round 0 Bid KO won 1",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 0},
+				},
+			},
+			Want: -20,
+		},
+		{
+			Name: "2nd Round 0 Bid KO won 2",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSkullKing, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+							{Player: players[3], Card: Card{Type: CardTypePirate, Value: 4}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 0},
+				},
+			},
+			Want: -20,
+		},
+		{
+			Name: "2nd Round 1 Bid OK",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: 20,
+		},
+		{
+			Name: "2nd Round 1 Bid OK + points",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitGreen, Value: 14}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitBlack, Value: 14}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 1},
+				},
+			},
+			Want: 30,
+		},
+		{
+			Name: "2nd Round 2 Bid OK",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitYellow, Value: 11}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitGreen, Value: 4}},
+							{Player: players[2], Card: Card{Type: CardTypeEscape}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 1}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 2},
+				},
+			},
+			Want: 40,
+		},
+		{
+			Name: "2nd Round 2 Bid OK + points",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSkullKing}},
+							{Player: players[1], Card: Card{Type: CardTypePirate}},
+							{Player: players[2], Card: Card{Type: CardTypePirate}},
+							{Player: players[3], Card: Card{Type: CardTypePirate}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 2},
+				},
+			},
+			Want: 140,
+		},
+		{
+			Name: "2nd Round 1 Bid KO got 1",
+			Round: Round{
+				Number: 2,
+				Tricks: []Trick{
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeSuitBlack, Value: 1}},
+							{Player: players[1], Card: Card{Type: CardTypeSuitYellow, Value: 2}},
+							{Player: players[2], Card: Card{Type: CardTypeSuitYellow, Value: 3}},
+							{Player: players[3], Card: Card{Type: CardTypeSuitYellow, Value: 14}},
+						},
+					},
+					{
+						Table: []*Play{
+							{Player: players[0], Card: Card{Type: CardTypeMermaid}},
+							{Player: players[1], Card: Card{Type: CardTypePirate}},
+							{Player: players[2], Card: Card{Type: CardTypePirate}},
+							{Player: players[3], Card: Card{Type: CardTypePirate}},
+						},
+					},
+				},
+				Bids: []Bid{
+					{Player: *players[0], Bid: 2},
+				},
+			},
+			Want: -10,
+		},
+	}
+	for _, tt := range table {
+		t.Run(tt.Name, func(t *testing.T) {
+			got := tt.Round.CheckBid(*players[0])
 			if !reflect.DeepEqual(got, tt.Want) {
 				t.Errorf("Expected Points %d / Received Points %d ", tt.Want, got)
 			}

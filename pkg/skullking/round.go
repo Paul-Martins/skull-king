@@ -33,13 +33,20 @@ type InfoPoints struct {
 // dealt. A round begins by dealing cards and ends when all
 // cards dealt have been played.
 type Round struct {
+	Number int
 	Tricks []Trick
+	Bids   []Bid
 }
 
 // Play is the Card played by a Player during a Trick
 type Play struct {
 	Player *Player
 	Card   Card
+}
+
+type Bid struct {
+	Player Player
+	Bid    int
 }
 
 // NewTrick creates a new empty Trick struct that can be used to Play cards by the Players
@@ -53,6 +60,43 @@ func NewTrick(numberOfPlayers int) *Trick {
 // It will return an error if the card cannot be played
 func (t *Trick) Play(p Play) error {
 	panic("Not Implemented Yet")
+}
+
+func (r *Round) CheckBid(player Player) int {
+	bid := r.getBidByPlayer(player)
+	roundsWon := 0
+	pointsWon := 0
+	for _, t := range r.Tricks {
+		if t.Winner().cmp(player) {
+			roundsWon++
+			pointsWon += t.Points()
+		}
+	}
+	if bid == 0 && roundsWon > 0 {
+		return -r.Number * 10
+	}
+	if bid == 0 {
+		return r.Number * 10
+	}
+	if bid == roundsWon {
+		pointsWon += bid * 20
+		return pointsWon
+	}
+	difference := bid - roundsWon
+	if difference > 0 {
+		difference = -difference
+	}
+	return difference * 10
+
+}
+
+func (r *Round) getBidByPlayer(player Player) int {
+	for _, b := range r.Bids {
+		if player.cmp(b.Player) {
+			return b.Bid
+		}
+	}
+	return 0
 }
 
 //Loop over the deck to gather info to check points
@@ -172,7 +216,7 @@ func (t *Trick) GatheringInfoWinner() InfoWinner {
 }
 
 // Winner will return the player that wins the current Trick
-func (t *Trick) Winner() int {
+func (t *Trick) WinnerPosition() int {
 	info := t.GatheringInfoWinner()
 	if info.SkullKing >= 0 && info.Mermaid >= 0 {
 		return info.Mermaid
@@ -200,4 +244,8 @@ func (t *Trick) Winner() int {
 	}
 
 	return 0
+}
+
+func (t *Trick) Winner() *Player {
+	return t.Table[t.WinnerPosition()].Player
 }
