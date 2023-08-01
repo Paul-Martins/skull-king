@@ -7,6 +7,8 @@ package skullking
 type Trick struct {
 	Table []*Play
 }
+
+//Structure to hold information in order to check winner of current trick
 type Info struct {
 	SkullKing  int
 	Pirate     int
@@ -46,7 +48,7 @@ func (t *Trick) Play(p Play) error {
 
 // Winner will return the player that wins the current Trick
 func (t *Trick) Winner() *Player {
-	winnerPosition := t.Winner2()
+	winnerPosition := t.winnerPosition()
 	return t.Table[winnerPosition].Player
 }
 
@@ -75,7 +77,8 @@ func (t *Trick) Leading() CardType {
 	return t.Table[position].Card.Type
 }
 
-func (t *Trick) GatheringInfo() Info {
+//Function that gathers the necessary information to check the winner of the current trick
+func (t *Trick) gatheringInfo() Info {
 	info := Info{
 		SkullKing:  -1,
 		Pirate:     -1,
@@ -113,8 +116,9 @@ func (t *Trick) GatheringInfo() Info {
 	return info
 }
 
-func (t *Trick) Winner2() int {
-	info := t.GatheringInfo()
+// WinnerPosition will return the position of the player that wins the current Trick
+func (t *Trick) winnerPosition() int {
+	info := t.gatheringInfo()
 	if info.SkullKing >= 0 && info.Mermaid >= 0 {
 		return info.Mermaid
 	}
